@@ -5,14 +5,14 @@ The page is a classic illustrated broadsheet for one day — Saturday
 Liberation family: masthead, giant serif date, red italic dek, a UTC
 timeline of the day, a six-figure numbers strip, region tabs counted
 from the story list itself, three hero panels with drawn scenes,
-twelve pictured story cards with certainty tags, a dot-matrix world
+twelve pictured story cards with certainty tags, a filled-block world
 map carrying a numbered pin for every pictured story, twenty-two
 one-line briefs, and a red date-check box that names the neighbouring
 days' stories this page deliberately leaves out.
 
 All 37 stories come from a verified research dossier: every figure
 was confirmed by two independent sources before it was allowed on the
-page, and the single state-media claim is tagged CLAIM where it sits.
+page, and the dossier's single-source claims were left off entirely.
 The render is deterministic — same data, same PNG, every run.
 
 Usage:  python3 frontpage.py   ->   entry.png + fallback.png (1024x1024)
@@ -50,7 +50,8 @@ NAVY_LIGHT = (31, 55, 84)
 NIGHT = (11, 21, 35)
 GOLD = (233, 165, 33)
 ORANGE = (243, 121, 33)
-MAP_DOT = (124, 136, 159)
+MAP_DOT = (106, 120, 148)
+MAP_SEA = (226, 232, 240)
 RULE_SOFT = (192, 184, 161)
 
 TAB_INK = {
@@ -175,7 +176,7 @@ BRIEFS = [
     (32, "Leh — Ladakh's first local polls: 70% turnout (PTI)", "Asia"),
     (33, "Taipei — 15 of 21 PLA sorties cross the line (MND)", "Asia"),
     (34, "Fukushima — Heavy snow isolates ~1,400 (Kyodo)", "Asia"),
-    (35, "Mastung — 15 militants killed, state media (CLAIM)", "Asia"),
+    (35, "Osaka — BTS take five MAMA trophies (Yonhap)", "Asia"),
     (36, "Wellington — India 486-4, lead New Zealand by 118 (AFP)", "Oceania"),
     (37, "Banda Sea — M6.8 quake, no damage reported (USGS)", "Oceania"),
 ]
@@ -183,7 +184,7 @@ BRIEFS = [
 # ------------------------------------------------------------------ numbers
 
 NUMBERS = [
-    ("$55,100", "BITCOIN'S LOW — A TWO-YEAR BOTTOM"),
+    ("2", "TANKERS HIT OFF KHASAB, OMAN, IN THE STRAIT"),
     ("1,343", "DEATHS IN BANGLADESH'S MEASLES OUTBREAK"),
     ("82,500", "MARCHERS ACROSS FRANCE, MINISTRY COUNT"),
     ("98.5%", "OF EU TARIFF LINES SCRAPPED FOR INDONESIA"),
@@ -207,7 +208,7 @@ REGION_TALLY = Counter(
 )
 
 # ------------------------------------------------------------------ map
-# A coarse dot-matrix world, one character per dot: '#' is land.
+# A coarse block world, one character per cell: '#' is land.
 # 48 columns x 21 rows, drawn by hand for this page.
 
 WORLD = [
@@ -353,6 +354,17 @@ def scene_hormuz(d, x, y, w, h):
     d.rectangle([x + 0.50 * w, ty - 7, x + 0.80 * w, ty], fill=(168, 84, 60))
     d.rectangle([x + 0.84 * w, ty - 12, x + 0.88 * w, ty], fill=(120, 116, 110))
     burst(d, x + 0.63 * w, ty - 8, 10)
+    # scene labels, in the annotated news-graphic manner
+    d.text((x + 0.30 * w, y + 4), "SITRA REFINERY · BAHRAIN",
+           font=font(SANS_BOLD, 8), fill=(240, 236, 226))
+    tag = "2 TANKERS HIT"
+    tw = d.textlength(tag, font=font(SANS_BOLD, 8))
+    d.rectangle([x + 0.97 * w - tw - 8, y + 4, x + 0.97 * w, y + 15],
+                fill=RED)
+    d.text((x + 0.97 * w - tw - 4, y + 6), tag, font=font(SANS_BOLD, 8),
+           fill=(255, 255, 255))
+    d.text((x + 0.06 * w, y + h - 13), "STRAIT OF HORMUZ",
+           font=font(SANS_BOLD, 8), fill=(150, 205, 228))
     _waves(d, x, y, w, [y + h - 7])
 
 
@@ -377,32 +389,58 @@ def scene_sparta(d, x, y, w, h):
         d.line([dx - 7, dy - 6, dx + 7, dy + 6], fill=(230, 230, 230), width=2)
         d.line([dx - 7, dy + 6, dx + 7, dy - 6], fill=(230, 230, 230), width=2)
         d.ellipse([dx - 2, dy - 2, dx + 2, dy + 2], fill=RED)
+    # smoke rising off the deck fire
+    for i, (fx, fy) in enumerate([(0.44, 0.40), (0.50, 0.33), (0.57, 0.27)]):
+        r = 6 + i * 3
+        d.ellipse([x + fx * w - r, y + fy * h - r, x + fx * w + r,
+                   y + fy * h + r], fill=(122, 120, 114))
     _waves(d, x, y, w, [y + h - 8, y + h - 15])
+    # scene labels last, over the water: the gulf, and the ship's name
+    d.text((x + 0.03 * w, y + h - 13), "GULF OF FINLAND",
+           font=font(SANS_BOLD, 8), fill=(170, 216, 238))
+    d.text((x + 0.30 * w, gy + 3), "SPARTA II", font=font(SANS_BOLD, 8),
+           fill=(228, 232, 238))
 
 
 def scene_cop(d, x, y, w, h):
-    """A summit clock run past the hour, and a green leaf."""
+    """A summit clock run past the hour; the draft text with its
+    fossil-fuels line struck out; a calendar whose scheduled days
+    run out on the 21st — day 13 of a 12-day summit."""
     d.rectangle([x, y, x + w, y + h], fill=(38, 46, 40))
     cy = y + h / 2
     # clock, left
-    cx = x + 0.24 * w
-    r = h * 0.34
+    cx = x + 0.14 * w
+    r = h * 0.32
     d.ellipse([cx - r, cy - r, cx + r, cy + r], outline=(235, 232, 220), width=3)
     d.line([cx, cy, cx, cy - r * 0.72], fill=(235, 232, 220), width=3)
     d.line([cx, cy, cx + r * 0.55, cy + r * 0.30], fill=RED, width=3)
-    d.text((cx - 14, cy + r + 3), "OVERTIME", font=font(SANS_BOLD, 9),
+    d.text((cx - 16, cy + r + 4), "OVERTIME", font=font(SANS_BOLD, 8),
            fill=(235, 232, 220))
-    # leaf, right
-    d.polygon([(x + 0.58 * w, cy + r * 0.8), (x + 0.70 * w, cy - r * 0.85),
-               (x + 0.90 * w, cy - r * 0.7), (x + 0.76 * w, cy + r * 0.8)],
-              fill=(52, 168, 84))
-    d.line([x + 0.60 * w, cy + r * 0.75, x + 0.88 * w, cy - r * 0.65],
-           fill=(30, 110, 55), width=2)
-    # struck-through fossil bar
-    d.rectangle([x + 0.52 * w, cy + r + 3, x + 0.94 * w, cy + r + 9],
-                fill=(120, 120, 118))
-    d.line([x + 0.52 * w, cy + r + 9, x + 0.94 * w, cy + r + 3], fill=RED,
-           width=2)
+    # the draft, centre: a page whose key line is struck through
+    dx0, dy0 = x + 0.28 * w, y + 7
+    dx1, dy1 = x + 0.60 * w, y + h - 7
+    d.rectangle([dx0, dy0, dx1, dy1], fill=(238, 234, 222))
+    d.text((dx0 + 6, dy0 + 4), "DRAFT TEXT", font=font(SANS_BOLD, 8), fill=INK)
+    for i, wd in enumerate((0.78, 0.60)):
+        ly = dy0 + 21 + i * 10
+        d.line([dx0 + 6, ly, dx0 + wd * (dx1 - dx0), ly],
+               fill=(120, 118, 110), width=2)
+    fy = dy0 + 45
+    ff = font(SERIF_ITALIC, 11)
+    d.text((dx0 + 6, fy), "fossil fuels", font=ff, fill=INK)
+    d.line([dx0 + 4, fy + 6, dx0 + 8 + d.textlength("fossil fuels", font=ff),
+            fy + 6], fill=RED, width=2)
+    # calendar, right: the scheduled days run out on the red 21st
+    gx = x + 0.65 * w
+    cell = 0.335 * w / 6
+    for i, day in enumerate(("16", "17", "18", "19", "20", "21")):
+        cx0 = gx + i * cell
+        d.rectangle([cx0 + 1, cy - 13, cx0 + cell - 1, cy + 7],
+                    fill=RED if day == "21" else (72, 82, 74))
+        middle(d, cx0 + cell / 2, cy - 9, day, font(SANS_BOLD, 9),
+               (245, 243, 235))
+    d.text((gx + 1, cy + 12), "DAY 13 OF 12", font=font(SANS_BOLD, 8),
+           fill=(245, 243, 235))
 
 
 def scene_robots(d, x, y, w, h):
@@ -664,6 +702,14 @@ def render():
     d.text((EDGE, 152), "THE DAY IN UTC", font=font(SANS_BOLD, 10), fill=RED)
     lab_w = d.textlength("THE DAY IN UTC  ", font=font(SANS_BOLD, 10))
     fit(d, EDGE + lab_w, 152, TIMELINE, SANS, 10, SPAN - lab_w, INK)
+    # an hour-tick ruler under the line, with a dot for each printed time
+    tl_x, tl_span = EDGE + lab_w, SPAN - lab_w
+    for k in range(25):
+        txp = tl_x + tl_span * k / 24
+        d.line([txp, 165, txp, 168], fill=FAINT, width=1)
+    for frac in (0.006, 0.250, 0.285, 0.404, 0.448, 0.767):
+        ex = tl_x + tl_span * frac
+        d.ellipse([ex - 2, 161, ex + 2, 165], fill=RED)
     d.line([EDGE, 168, PAGE - EDGE, 168], fill=INK, width=1)
 
     # ---- numbers strip
@@ -696,6 +742,14 @@ def render():
         SCENES[hero["scene"]](d, hx, hy, hero_w, 88)
         pin(d, hx + 15, hy + 15, hero["num"], r=10)
         d.text((hx, hy + 96), hero["tag"], font=font(SANS_BOLD, 11), fill=RED)
+        # every hero is two-source: it carries the same pill as the cards
+        pill = "● CONFIRMED"
+        pf = font(SANS_BOLD, 9)
+        pw = d.textlength(pill, font=pf) + 12
+        d.rounded_rectangle([hx + hero_w - pw, hy + 94, hx + hero_w,
+                             hy + 110], 3, fill=INK)
+        d.text((hx + hero_w - pw + 6, hy + 97), pill, font=pf,
+               fill=(255, 255, 255))
         block(d, hx, hy + 114, hero["head"], font(SERIF_BOLD, 27), INK,
               hero_w, 29, cap=2)
         block(d, hx, hy + 174, hero["summ"], font(SERIF, 13), INK,
@@ -721,15 +775,18 @@ def render():
     d.text((EDGE, by), "WHERE IT HAPPENED", font=font(SANS_BOLD, 12), fill=INK)
     map_x, map_y = EDGE, by + 24
     pitch_x, pitch_y = 7.5, 7.0
+    map_w = len(WORLD[0]) * pitch_x
+    map_h = len(WORLD) * pitch_y
+    d.rectangle([map_x - 5, map_y - 5, map_x + map_w + 5, map_y + map_h + 5],
+                fill=MAP_SEA)
     for ri, row in enumerate(WORLD):
         for ci, ch in enumerate(row):
             if ch == "#":
                 cxp = map_x + ci * pitch_x + pitch_x / 2
                 cyp = map_y + ri * pitch_y + pitch_y / 2
-                d.ellipse([cxp - 2.5, cyp - 2.5, cxp + 2.5, cyp + 2.5],
-                          fill=MAP_DOT)
-    map_w = len(WORLD[0]) * pitch_x
-    map_h = len(WORLD) * pitch_y
+                d.rectangle([cxp - pitch_x / 2 + 0.6, cyp - pitch_y / 2 + 0.6,
+                             cxp + pitch_x / 2 - 0.6, cyp + pitch_y / 2 - 0.6],
+                            fill=MAP_DOT)
     for num, (fx, fy) in PINS.items():
         pin(d, map_x + fx * map_w, map_y + fy * map_h, num, r=8.5)
     d.text((EDGE, map_y + map_h + 8),
@@ -757,14 +814,18 @@ def render():
     block(d, EDGE + 8, box_y + 6, DATE_CHECK, font(SERIF, 11), DEEP_RED,
           SPAN - 16, 12, cap=2)
 
-    # ---- footer
-    d.text((EDGE, 996),
+    # ---- footer: the certainty legend, then the dating line
+    d.text((EDGE, 994),
+           "HOW SURE — ● CONFIRMED: named by two or more major outlets · "
+           "● OFFICIAL: an official count or statement, attributed in place.",
+           font=font(SANS_BOLD, 9), fill=INK)
+    d.text((EDGE, 1008),
            "Every story here happened, or was first reported, on Saturday "
            "21 November 2026. Officials' counts are attributed in place.",
            font=font(SANS, 9), fill=FAINT)
     tail = "Sources named beside each story · original drawings"
     tf2 = font(SANS, 9)
-    d.text((PAGE - EDGE - d.textlength(tail, font=tf2), 1009), tail,
+    d.text((PAGE - EDGE - d.textlength(tail, font=tf2), 1008), tail,
            font=tf2, fill=FAINT)
 
     return grain(img)
